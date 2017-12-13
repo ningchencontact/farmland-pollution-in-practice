@@ -300,12 +300,9 @@ data_TARI <- data_TARI %>%
 ```
 
 
-### **2.計算農地樣區是否有超標情形**
-- `mindistance` (與最近的環保署列管農地距離，單位公尺)
-- `Is_monitored` (境內是否有環保署列管農地。1有，0無)
-- `minover` (方圓1公里內其他超標點總數)
+### **2 將農試所的超標與環保署列管案件在地圖上比較分布差異**
 
-### **2.1環保署資料場址座標轉經緯度**
+#### **2.1環保署資料場址座標轉經緯度**
 
 - 把TWD97位址資訊抓出來，分割成x軸與y軸
 ```{r}
@@ -330,6 +327,39 @@ data_EPA$coordinate <- NULL
 data_EPA <- cbind(data_EPA,TWD97,WGS84)
 head(data_EPA)
 ```
+
+
+
+
+#### **2.2用leaflet畫地圖**
+
+#### 地圖一：兩份資料交叉比對
+
+```{r　out.width ='600px', out.height ='700px'}
+library(leaflet)
+
+#先把要點上圖的資料篩選出來
+EPA <- data_EPA %>% filter(free_date=="2016-12-18") %>% select(lat, lon, area)
+TARI <- data_TARI %>% select(lat = Y,lon = X, area = AREA)
+
+
+leaflet() %>% setView(lng=120.58,lat=23.58,zoom=8) %>% 
+  addProviderTiles("Esri.WorldImagery") %>%
+  addCircles(data = EPA, color = "red", 
+             lng = ~lon, lat = ~lat, weight = 1, radius = ~sqrt(area)/2) %>%
+  addCircles(data = TARI, color = "yellow",
+             lng = ~lon, lat = ~lat, weight = 1, radius = ~sqrt(area)/2)
+ 
+```
+
+
+## 進階練習
+
+### **2.計算農地樣區是否有超標情形**
+- `mindistance` (與最近的環保署列管農地距離，單位公尺)
+- `Is_monitored` (境內是否有環保署列管農地。1有，0無)
+- `minover` (方圓1公里內其他超標點總數)
+
 
 
 ### **2.2 計算農試所資料與環保署案件資料場址距離**
@@ -391,26 +421,8 @@ stat_over %>% kable(.,format = "html") %>%
 
 ---
 
-##PART3--用leaflet畫地圖
-
-### 地圖一：兩份資料交叉比對
-
-```{r　out.width ='600px', out.height ='700px'}
-library(leaflet)
-
-#先把要點上圖的資料篩選出來
-EPA <- data_EPA %>% filter(free_date=="2016-12-18") %>% select(lat, lon, area)
-TARI <- data_TARI %>% select(lat = Y,lon = X, area = AREA)
 
 
-leaflet() %>% setView(lng=120.58,lat=23.58,zoom=8) %>% 
-  addProviderTiles("Esri.WorldImagery") %>%
-  addCircles(data = EPA, color = "red", 
-             lng = ~lon, lat = ~lat, weight = 1, radius = ~sqrt(area)/2) %>%
-  addCircles(data = TARI, color = "yellow",
-             lng = ~lon, lat = ~lat, weight = 1, radius = ~sqrt(area)/2)
- 
-```
 
 ### 地圖二：用log(mindistance)畫地圖
 
@@ -432,3 +444,4 @@ leaflet() %>%
             values=TARI$log_mindistance,
             title = 'log-mindistance')
 ```
+
